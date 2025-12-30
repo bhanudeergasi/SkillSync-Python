@@ -10,28 +10,28 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CUSTOM CSS (THE REFINEMENT) ---
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
-    /* Metric Cards: Cleaner, smaller shadow, visible text */
+    /* Metric Cards: Cleaner, smaller shadow, visible black text */
     .metric-card {
         background-color: #FFFFFF;
         color: #000000 !important;
-        padding: 15px; /* Reduced padding */
+        padding: 15px;
         border-radius: 8px;
         border-left: 6px solid #00C853;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Softer shadow */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin-bottom: 15px;
-        height: 100%; /* Auto height for alignment */
+        height: 100%;
     }
     
     /* Big Stats: Smaller font, text wrapping enabled */
     .big-stat {
-        font-size: 20px !important; /* Reduced from 26px */
+        font-size: 20px !important;
         font-weight: 700;
         color: #00C853;
         line-height: 1.3;
-        word-wrap: break-word; /* Prevents cut-off text */
+        word-wrap: break-word;
     }
     
     /* Labels: Subtle and small */
@@ -53,14 +53,21 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- SIDEBAR ---
+# --- SMART SIDEBAR (Auto-Login) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=50)
     st.title("SkillSync")
     st.markdown("Mapped for the **Green Economy**")
     st.divider()
-    api_key = st.text_input("🔑 Enter Gemini API Key", type="password")
-    st.info("Get free key at [Google AI Studio](https://aistudio.google.com/)")
+    
+    # Check if key is in Secrets (Automatic Login)
+    if "GOOGLE_API_KEY" in st.secrets:
+        st.success("✅ AI Credential Loaded")
+        api_key = st.secrets["GOOGLE_API_KEY"]
+    else:
+        # Fallback: Ask user if no secret is found
+        api_key = st.text_input("🔑 Enter Gemini API Key", type="password")
+        st.info("Get free key at [Google AI Studio](https://aistudio.google.com/)")
 
 # --- MAIN HEADER ---
 st.title("⚡ SkillSync: Workforce Transition")
@@ -79,7 +86,7 @@ with col1:
 if uploaded_file and api_key:
     genai.configure(api_key=api_key)
     # Using 1.5 Flash for speed and stability
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
     prompt = """
     Analyze this image of a workspace/worker. 
