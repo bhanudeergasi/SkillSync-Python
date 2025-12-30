@@ -80,7 +80,7 @@ if uploaded_file and api_key:
     genai.configure(api_key=api_key)
     
     # Use the stable model
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 
     prompt = """
     Analyze this image of a workspace/worker. 
