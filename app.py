@@ -85,8 +85,10 @@ with col1:
 # --- LOGIC ---
 if uploaded_file and api_key:
     genai.configure(api_key=api_key)
-    # Using 1.5 Flash for speed and stability
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    
+    # --- THE FIX: USING THE GENERIC 'gemini-pro' ALIAS ---
+    # This automatically finds the best available model for your key
+    model = genai.GenerativeModel('gemini-pro')
 
     prompt = """
     Analyze this image of a workspace/worker. 
