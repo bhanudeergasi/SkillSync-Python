@@ -86,7 +86,7 @@ with col1:
 if uploaded_file and api_key:
     genai.configure(api_key=api_key)
     # Using 1.5 Flash for speed and stability
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 
     prompt = """
     Analyze this image of a workspace/worker. 
