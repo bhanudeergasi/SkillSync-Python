@@ -4,94 +4,173 @@ from PIL import Image
 import json
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="SkillSync", page_icon="⚡", layout="wide")
+st.set_page_config(
+    page_title="SkillSync Dashboard",
+    page_icon="⚡",
+    layout="wide"
+)
 
-# --- CSS (Keep it Black & Readable) ---
+# --- CUSTOM CSS (THE REFINEMENT) ---
 st.markdown("""
-<style>
-.metric-card {
-    background-color: #FFFFFF;
-    color: #000000 !important;
-    padding: 15px;
-    border-radius: 8px;
-    border-left: 6px solid #00C853;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 15px;
-}
-.big-stat {
-    font-size: 20px !important;
-    font-weight: 700;
-    color: #00C853;
-    word-wrap: break-word;
-}
-</style>
-""", unsafe_allow_html=True)
+    <style>
+    /* Metric Cards: Cleaner, smaller shadow, visible text */
+    .metric-card {
+        background-color: #FFFFFF;
+        color: #000000 !important;
+        padding: 15px; /* Reduced padding */
+        border-radius: 8px;
+        border-left: 6px solid #00C853;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Softer shadow */
+        margin-bottom: 15px;
+        height: 100%; /* Auto height for alignment */
+    }
+    
+    /* Big Stats: Smaller font, text wrapping enabled */
+    .big-stat {
+        font-size: 20px !important; /* Reduced from 26px */
+        font-weight: 700;
+        color: #00C853;
+        line-height: 1.3;
+        word-wrap: break-word; /* Prevents cut-off text */
+    }
+    
+    /* Labels: Subtle and small */
+    .stat-label {
+        font-size: 12px;
+        color: #666;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    /* Description text inside cards */
+    .card-text {
+        font-size: 14px;
+        color: #333;
+        line-height: 1.5;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.title("SkillSync ⚡")
-    # Auto-Login
-    if "GOOGLE_API_KEY" in st.secrets:
-        api_key = st.secrets["GOOGLE_API_KEY"]
-        st.success("✅ AI Connected")
-    else:
-        api_key = st.text_input("🔑 API Key", type="password")
+    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=50)
+    st.title("SkillSync")
+    st.markdown("Mapped for the **Green Economy**")
+    st.divider()
+    api_key = st.text_input("🔑 Enter Gemini API Key", type="password")
+    st.info("Get free key at [Google AI Studio](https://aistudio.google.com/)")
 
-# --- MAIN ---
-st.title("⚡ SkillSync: Career Transition")
+# --- MAIN HEADER ---
+st.title("⚡ SkillSync: Workforce Transition")
+st.markdown("### Upload a workspace photo to generate a career pivot plan.")
+
+# --- LAYOUT ---
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    uploaded_file = st.file_uploader("📸 Upload Workspace", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader("📸 Upload Workspace Image", type=["jpg", "png", "jpeg"])
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image", use_column_width=True)
+        st.image(image, caption="Analyzing Environment...", use_column_width=True)
 
+# --- LOGIC ---
 if uploaded_file and api_key:
     genai.configure(api_key=api_key)
-
-    # --- THE NUCLEAR FIX: MODEL FALLBACK ---
-    # It tries 1.5 Flash. If that crashes (404), it silently switches to 'gemini-pro'
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        # Test if it works by checking name
-        test_name = model.model_name 
-    except:
-        st.warning("⚠️ Using Standard Model (Fallback)")
-        model = genai.GenerativeModel('gemini-pro')
+    # Using 1.5 Flash for speed and stability
+    model = genai.GenerativeModel('gemini-2.5-flash')
 
     prompt = """
-    Act as a Career Expert. Analyze this image.
-    Return a JSON object with this structure:
+    Analyze this image of a workspace/worker. 
+    Act as a Career Transition Expert.
+    Return ONLY a raw JSON object (no markdown formatting) with this exact structure:
     {
-        "current_role": "Job Title",
-        "skills_detected": ["Skill 1", "Skill 2"],
-        "green_career_match": "Green Job Title",
+        "current_role": "Predicted current job title (e.g. Diesel Mechanic)",
+        "skills_detected": ["Skill 1", "Skill 2", "Skill 3", "Skill 4"],
+        "green_career_match": "High-growth Green Economy Job Title",
         "match_percentage": 85,
-        "reasoning": "Why it fits",
-        "certification_course": "Course Name"
+        "reasoning": "Short 1-sentence explanation of why this fits.",
+        "certification_course": "Name of a specific certification to take"
     }
     """
 
     with col2:
-        if st.button("🚀 Analyze Career Path", type="primary"):
-            with st.spinner("Analyzing..."):
+        if st.button("🚀 Analyze & Generate Path", type="primary"):
+            with st.spinner("⚡ Gemini is analyzing tools, environment, and skills..."):
                 try:
                     response = model.generate_content([prompt, image])
-                    text = response.text.replace("```json", "").replace("```", "").strip()
-                    data = json.loads(text)
+                    clean_text = response.text.replace("```json", "").replace("```", "").strip()
+                    data = json.loads(clean_text)
 
-                    # --- DASHBOARD ---
-                    c1, c2, c3 = st.columns(3)
-                    c1.markdown(f'<div class="metric-card"><b>Role</b><br><span class="big-stat" style="color:#333">{data["current_role"]}</span></div>', unsafe_allow_html=True)
-                    c2.markdown(f'<div class="metric-card"><b>Match</b><br><span class="big-stat">{data["green_career_match"]}</span></div>', unsafe_allow_html=True)
-                    c3.markdown(f'<div class="metric-card"><b>Confidence</b><br><span class="big-stat">{data["match_percentage"]}%</span></div>', unsafe_allow_html=True)
+                    # --- UI: TOP METRICS ---
+                    m1, m2, m3 = st.columns(3)
                     
-                    st.write("---")
-                    st.subheader("Why this works:")
-                    st.info(data["reasoning"])
-                    st.subheader("Recommended Certification:")
-                    st.success(f"🎓 {data['certification_course']}")
+                    with m1:
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="stat-label">Current Role</div>
+                            <div class="big-stat" style="color: #333;">{data['current_role']}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    with m2:
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="stat-label">Green Career Match</div>
+                            <div class="big-stat">{data['green_career_match']}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                    with m3:
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="stat-label">Match Confidence</div>
+                            <div class="big-stat">{data['match_percentage']}%</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    # --- UI: DETAILS ---
+                    st.subheader("🛠️ Skill Bridge")
+                    
+                    c1, c2 = st.columns(2)
+                    
+                    with c1:
+                        # Reasoning Card
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="stat-label">Why this match?</div>
+                            <div class="card-text">
+                                {data['reasoning']}
+                            </div>
+                            <hr style="margin:10px 0; opacity:0.2;">
+                            <div class="stat-label">Detected Skills</div>
+                            <div class="card-text">
+                                {' • '.join(data['skills_detected'])}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    with c2:
+                        # Certification Card
+                        st.markdown(f"""
+                        <div class="metric-card" style="border-left-color: #2962FF;">
+                            <div class="stat-label">Recommended Certification</div>
+                            <div class="big-stat" style="color: #2962FF; font-size: 18px !important;">
+                                🎓 {data['certification_course']}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.link_button(f"Find Courses: {data['certification_course']}", "https://www.google.com/search?q=" + data['certification_course'])
+
+                    st.success("Analysis Complete.")
 
                 except Exception as e:
-                    st.error(f"Error: {e}")
+                    st.error(f"Error parsing AI response: {e}")
+                    with st.expander("Debug Raw Output"):
+                        st.write(response.text)
+
+elif not api_key:
+    with col2:
+        st.warning("👈 Please enter your API Key in the sidebar to start.")
